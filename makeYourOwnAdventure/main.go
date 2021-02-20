@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -57,7 +58,7 @@ func createArcFromMap(key string, givenMap interface{}) arc {
 	var storyArc arc
 	dbByte, err := json.Marshal(givenMap)
 	if err != nil {
-		println("Some error ")
+		fmt.Println("Some error ")
 	}
 	json.Unmarshal(dbByte, &storyArc)
 	storyArc.Key = key
@@ -70,15 +71,11 @@ func mapHandler(mapOfArcs map[string]arc) http.HandlerFunc {
 		path := r.URL.Path
 		path = path[1:len(path)]
 		el := mapOfArcs["intro"]
-		storyToBeShown := el.Story
-		titleToBeShown := el.Title
 		_, ok := mapOfArcs[path]
 		if ok {
 			el = mapOfArcs[path]
-			storyToBeShown = el.Story
-			titleToBeShown = el.Title
 		}
-		fmt.Fprintln(w, "Hello, world!\n title: ", titleToBeShown, "\n Story :", strings.Join(storyToBeShown, "."))
+		printStoryTemplate(w ,el)
 		return
 	}
 }
@@ -95,4 +92,24 @@ type arc struct {
 type option struct {
 	Text    string `json:"text"`
 	NextArc string `json:"arc"`
+}
+
+type arcView struct {
+	Title string
+	Story string
+	Options []option
+}
+
+func printStoryTemplate(w http.ResponseWriter, currentArc arc) {
+	tpl, err := template.ParseFiles("storyFile.gohtml")
+	if err != nil {
+		fmt.Println("Error in parsing temlate")
+	}
+	storyText := strings.Join(currentArc.Story, "")
+	view := arcView{currentArc.Title, storyText, currentArc.Options}
+	err = tpl.Execute(w, view)
+	if err != nil {
+		fmt.Println("Error in parsing temlate 2")
+	}
+
 }

@@ -1,0 +1,13 @@
+<h1>Hello, {{.Title}}</h1>
+<p>
+    {{.Story}}:
+<p>
+<ul>
+    {{range $val := .Options}}
+    <li>
+    <a href= {{$val.NextArc}}>
+        {{$val.Text}}
+    </a>
+    </li>
+    {{end}}
+</ul>
